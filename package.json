@@ -4,12 +4,35 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --passWithNoTests",
+    "test:ci": "npm test -- --coverage",
+    "lint-staged": "lint-staged",
+    "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NicsDeveloper/clean-node-api.git"
+  },
+  "author": "Nícolas Serrano e Thiago Koch",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NicsDeveloper/clean-node-api/issues"
+  },
+  "homepage": "https://github.com/NicsDeveloper/clean-node-api#readme",
   "devDependencies": {
-    "git-commit-msg-linter": "^5.0.6"
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "eslint": "^8.0.1",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "git-commit-msg-linter": "^4.11.1",
+    "husky": "^9.0.10",
+    "jest": "^29.7.0",
+    "lint-staged": "^13.2.2",
+    "ts-jest": "^29.1.2",
+    "typescript": "*"
   }
 }
