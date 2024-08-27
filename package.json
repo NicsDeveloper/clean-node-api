@@ -4,16 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --silent --noStackTrace --runInBand",
+    "test:verbose": "jest --passWithNoTests --runInBand",
+    "test:unit": "npm test -- --watch -c jest-unit-config.js",
+    "test:integration": "npm test -- --watch  -c jest-integration-config.js",
     "test:ci": "npm test -- --coverage",
     "lint-staged": "lint-staged",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:staged": "npm test --findRelatedTests"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NicsDeveloper/clean-node-api.git"
   },
-  "author": "Nícolas Serrano e Thiago Koch",
+  "author": "Nícolas Serrano",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/NicsDeveloper/clean-node-api/issues"
