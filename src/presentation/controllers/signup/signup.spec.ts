@@ -220,9 +220,7 @@ describe('SignUp Controller', () => {
       return await new Promise((resolve, reject) => { reject(new Error()) })
     })
 
-    const httpRequest = makeFakeRequest()
-
-    const httpResponse = await sut.handle(httpRequest)
+    const httpResponse = await sut.handle(makeFakeRequest())
 
     expect(httpResponse).toEqual(serverError(new ServerError('error')))
   })
