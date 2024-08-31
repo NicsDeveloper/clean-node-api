@@ -1,4 +1,5 @@
 import { type HashComparer } from '../../../data/protocols/criptography/hash-comparer'
+import { type TokenGenerator } from '../../../data/protocols/criptography/token-generator'
 import { type LoadAccountByEmailRepository } from '../../../data/protocols/db/load-account-by-email-repository'
 import { type AccountModel } from '../../models/account'
 import { type AuthenticationModel } from '../authentication'
@@ -41,21 +42,38 @@ const makeHashComparer = (): HashComparer => {
   return new HashComparerStub()
 }
 
+const makeTokenGenerator = (): TokenGenerator => {
+  class TokenGeneratorStub implements TokenGenerator {
+    async generate (id: string): Promise<string> {
+      return await new Promise(resolve => { return 'any_token' })
+    }
+  }
+
+  return new TokenGeneratorStub()
+}
+
 interface sutTypes {
   sut: DbAuthentication
   loadAccountByEmailRepositoryStub: LoadAccountByEmailRepository
   hashComparerStub: HashComparer
+  tokenGeneratorStub: TokenGenerator
 }
 
 const makeSut = (): sutTypes => {
+  const tokenGeneratorStub = makeTokenGenerator()
   const hashComparerStub = makeHashComparer()
   const loadAccountByEmailRepositoryStub = makeLoadAccountByEmailRepository()
-  const sut = new DbAuthentication(loadAccountByEmailRepositoryStub, hashComparerStub)
+  const sut = new DbAuthentication(
+    loadAccountByEmailRepositoryStub,
+    hashComparerStub,
+    tokenGeneratorStub
+  )
 
   return {
     sut,
     loadAccountByEmailRepositoryStub,
-    hashComparerStub
+    hashComparerStub,
+    tokenGeneratorStub
   }
 }
 
@@ -109,5 +127,12 @@ describe('DbAuthentication UseCase', () => {
     }))
     const accessToken = await sut.auth(makeFakeAuthentication())
     expect(accessToken).toBe(null)
+  })
+
+  it('Should call TokenGenerator with correct id', async () => {
+    const { sut, tokenGeneratorStub } = makeSut()
+    const generateSpy = jest.spyOn(tokenGeneratorStub, 'generate')
+    await sut.auth(makeFakeAuthentication())
+    expect(generateSpy).toHaveBeenCalledWith(makeFakeAccount().id)
   })
 })
