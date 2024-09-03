@@ -1,3 +1,6 @@
+#Docker Ignore
+data
+
 # Logs
 logs
 *.log
