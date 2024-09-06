@@ -1,5 +1,6 @@
 #Docker Ignore
 data
+!src/data
 
 # Logs
 logs
