@@ -1,7 +1,7 @@
 import { SignUpController } from './signup-controller'
-import { MissingParamError, ServerError } from '../../errors'
-import { type AddAccountModel, type AddAccount, type AccountModel, type HttpRequest, type Validation } from './signup-controller-protocols'
-import { badRequest, ok, serverError } from '../../helpers/http/http-helper'
+import { EmailInUseError, MissingParamError, ServerError } from '../../errors'
+import { type AddAccountModel, type AddAccount, type AccountModel, type HttpRequest, type Validation, type Authentication, type AuthenticationModel } from './signup-controller-protocols'
+import { badRequest, forbidden, ok, serverError } from '../../helpers/http/http-helper'
 
 const makeAddAccount = (): AddAccount => {
   class AddAccountStub implements AddAccount {
@@ -11,6 +11,15 @@ const makeAddAccount = (): AddAccount => {
   }
 
   return new AddAccountStub()
+}
+
+const makeAuthentication = (): Authentication => {
+  class AuthenticationStub implements Authentication {
+    async auth (authentication: AuthenticationModel): Promise<string> {
+      return 'any_token'
+    }
+  }
+  return new AuthenticationStub()
 }
 
 const makeFakeAccount = (): AccountModel => ({
@@ -43,17 +52,20 @@ interface SutTypes {
   sut: SignUpController
   addAccountStub: AddAccount
   validationStub: Validation
+  authenticationStub: Authentication
 }
 
 const makeSut = (): SutTypes => {
+  const authenticationStub = makeAuthentication()
   const addAccountStub = makeAddAccount()
   const validationStub = makeValidation()
-  const sut = new SignUpController(addAccountStub, validationStub)
+  const sut = new SignUpController(addAccountStub, validationStub, authenticationStub)
 
   return {
     sut,
     addAccountStub,
-    validationStub
+    validationStub,
+    authenticationStub
   }
 }
 
@@ -91,6 +103,17 @@ describe('SignUp Controller', () => {
     expect(httpResponse).toEqual(serverError(new ServerError('error')))
   })
 
+  it('Should return 403 if AddAccount returns null', async () => {
+    const { sut, addAccountStub } = makeSut()
+    jest.spyOn(addAccountStub, 'add').mockReturnValueOnce(Promise.resolve(null))
+
+    const httpRequest = makeFakeRequest()
+
+    const httpResponse = await sut.handle(httpRequest)
+
+    expect(httpResponse).toEqual(forbidden(new EmailInUseError()))
+  })
+
   it('Should return 200 if valid data is provided', async () => {
     const { sut } = makeSut()
 
@@ -98,7 +121,7 @@ describe('SignUp Controller', () => {
 
     const httpResponse = await sut.handle(httpRequest)
 
-    expect(httpResponse).toEqual(ok(makeFakeAccount()))
+    expect(httpResponse).toEqual(ok({ accessToken: 'any_token' }))
   })
 
   it('Should call Validation with correct value', async () => {
@@ -112,12 +135,35 @@ describe('SignUp Controller', () => {
     expect(validateSpy).toHaveBeenCalledWith(httpRequest.body)
   })
 
-  it('Should return 200 if validation returns an error', async () => {
+  it('Should return 400 if validation returns an error', async () => {
     const { sut, validationStub } = makeSut()
     jest.spyOn(validationStub, 'validate').mockReturnValueOnce(new MissingParamError('any_field'))
 
     const httpResponse = await sut.handle(makeFakeRequest())
 
     expect(httpResponse).toEqual(badRequest(new MissingParamError('any_field')))
+  })
+
+  it('Should call Authentication with correct values', async () => {
+    const { sut, authenticationStub } = makeSut()
+    const authSpy = jest.spyOn(authenticationStub, 'auth')
+
+    await sut.handle(makeFakeRequest())
+    const { email, password } = makeFakeRequest().body
+
+    expect(authSpy).toHaveBeenCalledWith({
+      email,
+      password
+    })
+  })
+
+  it('Should return 500 if Authentication throws', async () => {
+    const { sut, authenticationStub } = makeSut()
+    jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(new Promise((resolve, reject) => {
+      reject(new Error())
+    }))
+    const httpRequest = makeFakeRequest()
+    const httpResponse = await sut.handle(httpRequest)
+    expect(httpResponse).toEqual(serverError(new Error()))
   })
 })
