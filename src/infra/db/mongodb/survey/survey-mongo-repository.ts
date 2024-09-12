@@ -1,6 +1,6 @@
-import { type LoadSurveysRepository } from '../../../../data/protocols/db/survey/load-surveys-repository'
-import { type AddSurveyModel, type AddSurveyRepository } from '../../../../data/usecases/add-survey/db-add-survey-protocols'
-import { type SurveyModel } from '../../../../domain/models/survey'
+import { type LoadSurveysRepository } from '@/data/protocols/db/survey/load-surveys-repository'
+import { type AddSurveyModel, type AddSurveyRepository } from '@/data/usecases/add-survey/db-add-survey-protocols'
+import { type SurveyModel } from '@/domain/models/survey'
 import { MongoHelper } from '../helper/mongo-helper'
 
 export class SurveyMongoRepository implements AddSurveyRepository, LoadSurveysRepository {

@@ -1,5 +1,5 @@
 export * from './controller'
 export * from './http'
 export * from './validation'
-export * from '../../domain/usecases/add-survey'
+export * from '@/domain/usecases/add-survey'
 export * from './middleware'
