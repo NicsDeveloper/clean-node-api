@@ -24,13 +24,6 @@ describe('Survey Routes', () => {
     await accountCollection.deleteMany({})
   })
 
-  describe('GET /surveys', () => {
-    it('Should return 403 on load survey without access token', async () => {
-      await request(app)
-        .get('/api/surveys')
-        .expect(403)
-    })
-  })
   describe('POST /surveys', () => {
     it('Should return 403 on add survey without access token', async () => {
       await request(app)
@@ -85,6 +78,64 @@ describe('Survey Routes', () => {
           ]
         })
         .expect(204)
+    })
+  })
+
+  describe('GET /surveys', () => {
+    it('Should return 403 on load survey without access token', async () => {
+      await request(app)
+        .get('/api/surveys')
+        .expect(403)
+    })
+
+    it('Should return 200 on load surveys with valida accessToken', async () => {
+      const result = await accountCollection.insertOne({
+        name: 'John Doe',
+        email: 'johndoe@mail.com',
+        password: '123'
+      })
+      const id = result.insertedId.toHexString()
+      const accessToken = sign({ id }, env.jwtSecret)
+      await accountCollection.updateOne(
+        {
+          _id: result.insertedId
+        },
+        {
+          $set: {
+            accessToken
+          }
+        })
+
+      await surveyCollection.insertOne({
+        question: 'Question',
+        answers: [
+          {
+            answer: 'Answer 1',
+            image: 'http://image-name.com'
+          },
+          {
+            answer: 'Answer 2'
+          }
+        ],
+        date: new Date()
+      })
+
+      await request(app)
+        .get('/api/surveys')
+        .set('x-access-token', accessToken)
+        .send({
+          question: 'Question',
+          answers: [
+            {
+              answer: 'Answer 1',
+              image: 'http://image-name.com'
+            },
+            {
+              answer: 'Answer 2'
+            }
+          ]
+        })
+        .expect(200)
     })
   })
 })
